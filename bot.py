@@ -3,7 +3,7 @@
 import discord
 from discord.ext import commands
 
-import sys
+import sys, json, traceback
 
 # Constants
 AUTH_FILE = 'auth.json'
@@ -11,11 +11,7 @@ AUTH_FIELD = 'token'
 
 COMMAND_PREFIX = '?'
 
-BOT_OWNER = 141102297550684160
 BOT_DESCRIPTION = 'Bot for personal use with random commands'
-
-# Extensions to load
-extensions = []
 
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, description=BOT_DESCRIPTION)
 
@@ -23,26 +19,20 @@ bot = commands.Bot(command_prefix=COMMAND_PREFIX, description=BOT_DESCRIPTION)
 async def on_ready():
     print('Bot is ready')
 
-@bot.command(checks=is_owner, hidden=True)
-async def reload(elist=None):
-    '''
-    Reloads extensions
-    '''
-    if elist is None:
-        elist = extensions
+def __main__():
+    bot_token = json.load(open(AUTH_FILE, 'r'))[AUTH_FIELD]
+    if load_admin_extension():
+        bot.run(bot_token)
+    else:
+        print('Failed to load admin extension')
 
-    # Extensions that succeded or failed to load
-    success = []
-    failed = []
+def load_admin_extension():
+    try:
+        bot.load_extension('extensions.admin')
+    except Exception as e:
+        traceback.print_exc()
+        return False
+    return True
 
-    for extension in elist:
-        bot.unload_extension(extension)
-        try:
-            bot.load_extension(extension)
-            success.append(extension)
-        except Exception as e:
-            failed.append(extension)
-            print(e)
-
-    await bot.say('Successfully loaded: {}'.format(success))
-    await bot.say('Failed to load: {}, see console for more details'.format(failed))
+if __name__ == '__main__':
+    __main__()
