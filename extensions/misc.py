@@ -28,8 +28,10 @@ class Misc(commands.Cog):
             await ctx.invoke(self.disobedience, ctx.author, 'treason with the power of a trillion suns')
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.invoke(self.disobedience, ctx.author, 'spamming a command')
-        else:
+        elif isinstance(error, commands.UserInputError:
             await ctx.invoke(self.disobedience, ctx.author, 'incompetence')
+        else:
+            logging.error('Something fatal ocurred')
 
     @commands.command()
     async def spongecase(self,
