@@ -90,7 +90,7 @@ class Misc(commands.Cog):
     async def smite(self, ctx: commands.Context, member: discord.Member):
         logging.info('Smite {}'.format(member))
         await ctx.message.delete()
-        await ctx.invoke(self.disobedience, member, 'God wished it so')
+        await ctx.invoke(self.disobedience, member, 'it was the way of the Steins;Gate')
 
     @commands.command()
     @commands.is_owner()
