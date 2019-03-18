@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-import datetime
+import datetime, logging
 
 class Uptime(commands.Cog):
     
