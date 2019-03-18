@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-import os, random, re, typing, traceback
+import os, random, re, typing, traceback, logging
 
 class Misc(commands.Cog):
 
@@ -12,6 +12,7 @@ class Misc(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: discord.DiscordException):
+        logging.debug('Misc error by {}: {}'.format(ctx.author, error))
         ignored = (commands.CommandNotFound)
         error = getattr(error, 'original', error)
 
@@ -31,13 +32,13 @@ class Misc(commands.Cog):
             await ctx.invoke(self.disobedience, ctx.author, 'incompetence')
 
     @commands.command()
-    @commands.cooldown(1, 3)
     async def spongecase(self,
                    ctx: commands.Context,
                    member: typing.Optional[discord.Member]=None,
                    distance: typing.Optional[int]=0,
                    *,
                    message=None):
+        logging.info('Spongecase {} {} {}'.format(member, distance, message))
         if message is not None:
             # Prevent boring messages
             spongecased_message = self._spongecaseify(message)
@@ -50,6 +51,7 @@ class Misc(commands.Cog):
             await ctx.invoke(self.spongecase_last_message, member, distance)
         else:
             await ctx.invoke(self.disobedience, ctx.author, 'incompetence')
+        logging.info('Done spongecase')
 
     @commands.command(hidden=True)
     async def spongecase_last_message(self, ctx: commands.Context, member: discord.Member, distance: int):
@@ -66,6 +68,7 @@ class Misc(commands.Cog):
 
     @commands.command(aliases=['dildo', 'whale'])
     async def trout(self, ctx: commands.Context, member: discord.Member):
+        logging.info('Trout {} by {}'.format(member, ctx.author))
         await ctx.message.delete()
         if await self._bot.is_owner(member) or member.bot:
             await ctx.invoke(self.disobedience, member, 'disobedience')
@@ -76,12 +79,14 @@ class Misc(commands.Cog):
                 await ctx.send('{} gets a {} shoved up their ass'.format(member.mention, ctx.invoked_with))
             elif ctx.invoked_with in ['whale']:
                 await ctx.send('{} gets smushed by a giant {}'.format(member.mention, ctx.invoked_with))
+        logging.info('Done trouting')
 
     # Owner only commands
 
     @commands.command()
     @commands.is_owner()
     async def smite(self, ctx: commands.Context, member: discord.Member):
+        logging.info('Smite {}'.format(member))
         await ctx.message.delete()
         await ctx.invoke(self.disobedience, member, 'God wished it so')
 
@@ -94,7 +99,7 @@ class Misc(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        print('Logging: {}'.format(message.content))
+        logging.info('Author: {}; Content: {}'.format(message.author, message.content))
         # Ignore anything from a bot
         if message.author.bot:
             return
@@ -122,5 +127,6 @@ class Misc(commands.Cog):
         return ' '.join(response_words)
 
 def setup(bot: commands.Bot):
-    print('Setting up Misc extension')
+    logging.info('Setting up Misc extension')
     bot.add_cog(Misc(bot))
+    logging.info('Done setting up Misc extension')
