@@ -70,6 +70,9 @@ class Admin(commands.Cog):
         await ctx.send('`Extensions: {}`'.format(list(self._bot.extensions.keys())))
 
     async def on_command_error(self, ctx, error):
+        if hasattr(ctx.command, 'on_error'):
+            return
+
         error = getattr(error, 'original', error)
 
         ignored = (commands.CommandNotFound, commands.UserInputError)

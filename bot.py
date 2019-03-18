@@ -19,6 +19,14 @@ bot = commands.Bot(command_prefix=COMMAND_PREFIX, description=BOT_DESCRIPTION)
 async def on_ready():
     print('Bot is ready')
 
+@bot.event
+async def on_command_error(ctx: commands.Context, error: discord.DiscordException):
+    # Ignore invalid commands
+    if isinstance(error, commands.CommandNotFound):
+        return
+    # Propogate error
+    raise error
+
 def __main__():
     bot_token = json.load(open(AUTH_FILE, 'r'))[AUTH_FIELD]
     if load_admin_extension():

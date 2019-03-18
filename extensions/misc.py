@@ -12,20 +12,26 @@ class Misc(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: discord.DiscordException):
-        if await self._bot.is_owner(ctx.author) or ctx.bot:
-            print(error)
+        ignored = (commands.CommandNotFound)
+        error = getattr(error, 'original', error)
+
+        if isinstance(error, ignored):
+            return
+
+        if await self._bot.is_owner(ctx.author):
             traceback.print_exc()
             await ctx.send('You messed up, but I forgive you {}'.format(ctx.author.mention))
             return
 
-        error = getattr(error, 'original', error)
-
         if isinstance(error, commands.NotOwner):
             await ctx.invoke(self.disobedience, ctx.author, 'treason with the power of a trillion suns')
+        elif isinstance(error, commands.CommandOnCooldown):
+            await ctx.invoke(self.disobedience, ctx.author, 'spamming a command')
         else:
             await ctx.invoke(self.disobedience, ctx.author, 'incompetence')
 
     @commands.command()
+    @commands.cooldown(1, 3)
     async def spongecase(self,
                    ctx: commands.Context,
                    member: typing.Optional[discord.Member]=None,
@@ -33,6 +39,11 @@ class Misc(commands.Cog):
                    *,
                    message=None):
         if message is not None:
+            # Prevent boring messages
+            spongecased_message = self._spongecaseify(message)
+            while spongecased_message.isupper() or spongecased_message.islower():
+                spongecased_message = self._spongecaseify(message)
+
             spongecased_being = member if member is not None else ctx.author
             await ctx.send('{}: {}'.format(spongecased_being.mention, self._spongecaseify(message)))
         elif member is not None:
@@ -59,7 +70,12 @@ class Misc(commands.Cog):
         if await self._bot.is_owner(member) or member.bot:
             await ctx.invoke(self.disobedience, member, 'disobedience')
         else:
-            await ctx.send('{} gets slapped in the face with a {}'.format(member.mention, ctx.invoked_with))
+            if ctx.invoked_with in ['trout']:
+                await ctx.send('{} gets slapped in the face with a {}'.format(member.mention, ctx.invoked_with))
+            elif ctx.invoked_with in ['dildo']:
+                await ctx.send('{} gets a {} shoved up their ass'.format(member.mention, ctx.invoked_with))
+            elif ctx.invoked_with in ['whale']:
+                await ctx.send('{} gets smushed by a giant {}'.format(member.mention, ctx.invoked_with))
 
     # Owner only commands
 
@@ -67,7 +83,7 @@ class Misc(commands.Cog):
     @commands.is_owner()
     async def smite(self, ctx: commands.Context, member: discord.Member):
         await ctx.message.delete()
-        await ctx.invoke(self.disobedience, member, 'god wished it so')
+        await ctx.invoke(self.disobedience, member, 'God wished it so')
 
     @commands.command()
     @commands.is_owner()
@@ -88,7 +104,8 @@ class Misc(commands.Cog):
         if message.mention_everyone:
             file_list = os.listdir(self._res_path)
             selected_reaction = random.choice(file_list)
-            await channel.send(file=discord.File(self._res_path + selected_reaction))
+            condemn = '{} is BANISHED to the shadow realm'.format(message.author.mention)
+            await channel.send(content=condemn, file=discord.File(self._res_path + selected_reaction))
 
     # Helper methods
     def _spongecaseify(self, message):
