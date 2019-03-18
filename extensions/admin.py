@@ -1,10 +1,20 @@
 import discord
 from discord.ext import commands
 
+import logging
+
 class Admin(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot = bot
+        self._failed = {}
+        self._initial_extensions = [
+            'extensions.misc',
+            'extensions.uptime'
+        ]
+
+        for extension in self._initial_extensions:
+            self._bot.load_extension(extension)
 
     @commands.command()
     @commands.is_owner()
@@ -16,28 +26,32 @@ class Admin(commands.Cog):
     @commands.is_owner()
     async def reload(self, ctx: commands.Context, *extension_list: (str)):
         if not extension_list:
-            extension_list = self._bot.extensions.copy().keys()
+            extension_list = set(self._bot.extensions.keys())
 
-        if extension_list:
-            # Extensions that succeded or failed to load
-            success = []
-            failed = []
+        # Try to reload previously failed extensions
+        extension_list += tuple(self._failed)
+        self._failed.clear()
 
-            for extension in self._preprocess_extensions(extension_list):
-                self._bot.unload_extension(extension)
-                try:
-                    self._bot.load_extension(extension)
-                    success.append(extension)
-                except Exception as e:
-                    failed.append(extension)
-                    print(e)
+        # Extensions that succeded or failed to load
+        success = []
+        failed = []
 
-            if success:
-                await ctx.send('Successfully loaded: `{}`'.format(success))
-            if failed:
-                await ctx.send('Failed to load: `{}`, see console for more details'.format(failed))
-        else:
-            await ctx.send('Extensions list is empty')
+        for extension in self._preprocess_extensions(extension_list):
+            self._bot.unload_extension(extension)
+            try:
+                self._bot.load_extension(extension)
+                success.append(extension)
+            except Exception as e:
+                failed.append(extension)
+                print(e)
+
+        # Update the failed list for reloading later
+        self._failed.update(set(failed))
+
+        if success:
+            await ctx.send('Successfully loaded: `{}`'.format(success))
+        if failed:
+            await ctx.send('Failed to load: `{}`, see console for more details'.format(failed))
 
     @commands.command()
     @commands.is_owner()
@@ -99,5 +113,7 @@ class Admin(commands.Cog):
 
 
 def setup(bot: commands.Bot):
-    print('Setting up Admin extension')
+    logging.info('Setting up Admin extension')
     bot.add_cog(Admin(bot))
+    logging.info('Done setting up Admin extension')
+
