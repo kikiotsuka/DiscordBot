@@ -8,6 +8,12 @@ class Admin(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
+    async def shutdown(self, ctx: commands.Context):
+        await ctx.send('Goodbye')
+        await self._bot.logout()
+
+    @commands.command()
+    @commands.is_owner()
     async def reload(self, ctx: commands.Context, *extension_list: (str)):
         if not extension_list:
             extension_list = self._bot.extensions.copy().keys()

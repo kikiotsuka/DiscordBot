@@ -11,6 +11,7 @@ class Uptime(commands.Cog):
 
     @commands.command()
     async def uptime(self, ctx: commands.Context):
+        logging.info('Uptime invoked by: {}'.format(ctx.author))
         end = datetime.datetime.now()
         delta = end - self._start
         days, seconds = delta.days, delta.seconds
