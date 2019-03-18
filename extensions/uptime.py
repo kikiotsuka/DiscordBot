@@ -10,7 +10,7 @@ class Uptime(commands.Cog):
         self._start = datetime.datetime.now()
 
     @commands.command()
-    def uptime(self, ctx: commands.Context):
+    async def uptime(self, ctx: commands.Context):
         end = datetime.datetime.now()
         delta = end - self._start
         days, seconds = delta.days, delta.seconds
