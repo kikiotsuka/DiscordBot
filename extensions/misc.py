@@ -28,7 +28,7 @@ class Misc(commands.Cog):
             await ctx.invoke(self.disobedience, ctx.author, 'treason with the power of a trillion suns')
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.invoke(self.disobedience, ctx.author, 'spamming a command')
-        elif isinstance(error, commands.UserInputError:
+        elif isinstance(error, commands.UserInputError):
             await ctx.invoke(self.disobedience, ctx.author, 'incompetence')
         else:
             logging.error('Something fatal ocurred')
