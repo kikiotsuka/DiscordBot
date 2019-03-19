@@ -8,7 +8,9 @@ class Test(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        print('From test: {}'.format(message))
+        if message.content.contains(':wink:'):
+            channel = message.channel
+            await channel.send(':wink:')
 
 def setup(bot: commands.Bot):
     bot.add_cog(Test(bot))

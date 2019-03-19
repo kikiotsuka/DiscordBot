@@ -116,17 +116,28 @@ class Misc(commands.Cog):
 
     # Helper methods
     def _spongecaseify(self, message):
-        tokens = message.split(' ')
-        response_words = [tokens[0]]
-        for word in tokens[1:]:
-            spongbobified = ''
+        response_words = []
+        for word in message.split(' '):
             if not self._spongebob_regex.search(word):
-                for c in word:
-                    spongbobified += c.upper() if random.random() < 0.5 else c.lower()
-                response_words.append(spongbobified)
+                spongecased_word = self._spongecase_word(word)
+                while len(word) > 1 and (spongecased_word.islower() or spongecased_word.isupper()):
+                    spongecased_word = self._spongecase_word(word)
+                response_words.append(spongecased_word)
             else:
                 response_words.append(word)
         return ' '.join(response_words)
+
+    def _spongecase_word(self, word):
+        spongecased_word = ''
+        wlen = len(word)
+        count = wlen // 2
+        for i in range(wlen):
+            if random.random() < count / (wlen - i):
+                spongecased_word += word[i].lower()
+                count -= 1
+            else:
+                spongecased_word += word[i].upper()
+        return spongecased_word
 
 def setup(bot: commands.Bot):
     logging.info('Setting up Misc extension')
