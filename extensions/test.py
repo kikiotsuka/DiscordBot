@@ -8,9 +8,9 @@ class Test(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.content.contains(':wink:'):
+        if message.content in [':wink:', ':flushed:']:
             channel = message.channel
-            await channel.send(':wink:')
+            await channel.send(message.content)
 
 def setup(bot: commands.Bot):
     bot.add_cog(Test(bot))
