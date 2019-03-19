@@ -8,7 +8,7 @@ class Test(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.content in [':wink:', ':flushed:']:
+        if message.content == ':wink:' or message.content == ':flushed:':
             channel = message.channel
             await channel.send(message.content)
 
