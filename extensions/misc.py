@@ -42,10 +42,7 @@ class Misc(commands.Cog):
                    message=None):
         logging.info('Spongecase {} {} {}'.format(member, distance, message))
         if message is not None:
-            # Prevent boring messages
             spongecased_message = self._spongecaseify(message)
-            while spongecased_message.isupper() or spongecased_message.islower():
-                spongecased_message = self._spongecaseify(message)
 
             spongecased_being = member if member is not None else ctx.author
             await ctx.send('{}: {}'.format(spongecased_being.mention, self._spongecaseify(message)))
