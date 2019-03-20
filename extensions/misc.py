@@ -110,9 +110,9 @@ class Misc(commands.Cog):
             selected_reaction = random.choice(file_list)
             autism = message.guild.get_role(557816089296502784)
             await message.author.add_roles(autism)
-            await channel.send(content=condemn, file=discord.File(self._res_path + selected_reaction))
             condemn = '{} joins the {} gang for tagging too many people'.format( \
                     message.author.mention, autism.mention)
+            await channel.send(content=condemn, file=discord.File(self._res_path + selected_reaction))
 
     # Helper methods
     def _spongecaseify(self, message):
