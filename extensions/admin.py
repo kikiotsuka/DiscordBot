@@ -13,7 +13,8 @@ class Admin(commands.Cog):
         ]
 
         for extension in self._initial_extensions:
-            self._bot.load_extension(extension)
+            if extension not in self._bot.extensions:
+                self._bot.load_extension(extension)
 
     @commands.command()
     @commands.is_owner()
