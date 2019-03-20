@@ -110,7 +110,7 @@ class Misc(commands.Cog):
             file_list = os.listdir(self._res_path)
             selected_reaction = random.choice(file_list)
             await message.author.add_roles(self._autism)
-            condemn = '{} joins the {} gang for tagging too many people'.format(
+            condemn = '{} joins the {} gang for tagging too many people'.format( \
 		message.author.mention, self._autism.mention)
             await channel.send(content=condemn, file=discord.File(self._res_path + selected_reaction))
 
