@@ -110,7 +110,7 @@ class Misc(commands.Cog):
             selected_reaction = random.choice(file_list)
             condemn = '{} has major autism for tagging too many people'.format(message.author.mention)
             await channel.send(content=condemn, file=discord.File(self._res_path + selected_reaction))
-            autism = message.guild.get_role('557816089296502784')
+            autism = await message.guild.get_role('557816089296502784')
             await message.author.add_roles(autism)
 
     # Helper methods
