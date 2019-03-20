@@ -9,7 +9,6 @@ class Misc(commands.Cog):
         self._bot = bot
         self._res_path = 'res/'
         self._spongebob_regex = re.compile(r'<@!?(\d+)>|<@&(\d+)>|<#(\d+)>')
-        self._autism = message.guild.get_role(557816089296502784)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: discord.DiscordException):
@@ -109,10 +108,11 @@ class Misc(commands.Cog):
         if message.mention_everyone:
             file_list = os.listdir(self._res_path)
             selected_reaction = random.choice(file_list)
-            await message.author.add_roles(self._autism)
-            condemn = '{} joins the {} gang for tagging too many people'.format( \
-		message.author.mention, self._autism.mention)
+            autism = message.guild.get_role(557816089296502784)
+            await message.author.add_roles(autism)
             await channel.send(content=condemn, file=discord.File(self._res_path + selected_reaction))
+            condemn = '{} joins the {} gang for tagging too many people'.format( \
+                    message.author.mention, autism.mention)
 
     # Helper methods
     def _spongecaseify(self, message):
