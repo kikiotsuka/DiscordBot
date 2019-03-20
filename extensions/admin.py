@@ -7,7 +7,6 @@ class Admin(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot = bot
-        self._failed = {}
         self._initial_extensions = [
             'extensions.misc',
             'extensions.uptime'
@@ -28,25 +27,20 @@ class Admin(commands.Cog):
         if not extension_list:
             extension_list = set(self._bot.extensions.keys())
 
-        # Try to reload previously failed extensions
-        extension_list += tuple(self._failed)
-        self._failed.clear()
-
         # Extensions that succeded or failed to load
         success = []
         failed = []
 
         for extension in self._preprocess_extensions(extension_list):
-            self._bot.unload_extension(extension)
             try:
-                self._bot.load_extension(extension)
+                if extension in self._bot.extensions:
+                    self._bot.reload_extension(extension)
+                else:
+                    self._bot.load_extension(extension)
                 success.append(extension)
             except Exception as e:
                 failed.append(extension)
                 print(e)
-
-        # Update the failed list for reloading later
-        self._failed.update(set(failed))
 
         if success:
             await ctx.send('Successfully loaded: `{}`'.format(success))
