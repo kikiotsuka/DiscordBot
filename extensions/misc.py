@@ -94,6 +94,19 @@ class Misc(commands.Cog):
     async def disobedience(self, ctx: commands.Context, member: discord.Member, reason: str):
         await ctx.send('{} smites {} for {}'.format(self._bot.user.mention, member.mention, reason))
 
+    @commands.command()
+    @commands.is_owner()
+    async def snipe(self, ctx: commands.Context, distance: int=0):
+        message_count = 0
+        async for message in ctx.channel.history(limit=200):
+            if message.author.id == 556918927670902816:
+                if message_count >= distance:
+                    logging.info('SUCCESSFUL SNIPE')
+                    await message.add_reaction(message.reactions[0])
+                    break
+                else:
+                    message_count += 1
+
     # Listeners
 
     @commands.Cog.listener()
@@ -101,6 +114,14 @@ class Misc(commands.Cog):
         logging.info('Author: {}; Content: {}'.format(message.author, message.content))
         # Ignore anything from a bot
         if message.author.bot:
+            # Snipe waifu
+            if message.embeds:
+                e = message.embeds[0]
+                print(e.description)
+                if 'Steins;Gate<:female:452463537508450304>' in e.description:
+                    # todo snipe
+                    pass
+                    #message.add_reaction()
             return
 
         channel = message.channel
