@@ -80,6 +80,10 @@ class Misc(commands.Cog):
                 await ctx.send('{} gets smushed by a giant {}'.format(member.mention, ctx.invoked_with))
         logging.info('Done trouting')
 
+    @commands.command()
+    async def git(self, ctx: commands.Context):
+        await ctx.send('https://github.com/kikiotsuka/DiscordBot')
+
     # Owner only commands
 
     @commands.command()
