@@ -3,6 +3,8 @@ from discord.ext import commands
 
 import os, random, re, typing, traceback, logging
 
+import extensions.admin
+
 class Misc(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
@@ -34,6 +36,7 @@ class Misc(commands.Cog):
             logging.error('Something fatal ocurred')
 
     @commands.command()
+    @commands.check(extensions.admin.has_command_perms)
     async def spongecase(self,
                    ctx: commands.Context,
                    member: typing.Optional[discord.Member]=None,
@@ -70,7 +73,7 @@ class Misc(commands.Cog):
         logging.info('Trout {} by {}'.format(member, ctx.author))
         await ctx.message.delete()
         if await self._bot.is_owner(member) or member.bot:
-            await ctx.invoke(self.disobedience, member, 'disobedience')
+            await ctx.invoke(self.disobedience, ctx.author, 'disobedience')
         else:
             if ctx.invoked_with in ['trout']:
                 await ctx.send('{} gets slapped in the face with a {}'.format(member.mention, ctx.invoked_with))
