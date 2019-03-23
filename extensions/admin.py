@@ -63,19 +63,20 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def purge(self, ctx: commands.Context, delete_count: int=1):
-        if not 1 <= delete_count <= 100:
-            await ctx.send('Error: expected a number in the range [1, 100]')
-            return
-
-        def predicate(member: discord.Member):
-            return True
-        await self._cleanup_aux(ctx, delete_count, True, predicate)
+        if delete_count <= 100:
+            def predicate(member: discord.Member):
+                return True
+        else:
+            def exit_predicate(message_id: int):
+                return message_id == delete_count
+        await self._cleanup_aux(ctx, delete_count, True, predicate, exit_predicate)
 
     async def _cleanup_aux(self,
                            ctx: commands.Context,
                            delete_count: int,
                            skip_first: bool,
-                           predicate: typing.Callable[[discord.Member], bool]):
+                           predicate: typing.Callable[[discord.Member], bool],
+                           exit_predicate: typing.Callable[[discord.Message], bool]=None):
         to_remove = []
         async for message in ctx.channel.history(limit=100):
             time_delta = datetime.datetime.now() - message.created_at
@@ -91,6 +92,10 @@ class Admin(commands.Cog):
 
                 if len(to_remove) >= delete_count:
                     break
+
+                if exit_predicate is not None:
+                    if exit_predicate(message.id):
+                        break
         
         if to_remove:
             await ctx.channel.delete_messages(to_remove)
