@@ -26,7 +26,7 @@ def blacklisted(local_blacklist=None):
         local_blacklist = []
 
     async def perm_predicate(ctx: commands.Context):
-        return not ctx.author.id in blacklist and not ctx.author.id in local_blacklist
+        return not ctx.author.id in blacklist or not ctx.author.id in local_blacklist
     return commands.check(perm_predicate)
 
 class Admin(commands.Cog):

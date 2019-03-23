@@ -3,18 +3,17 @@ from discord.ext import commands
 
 import logging
 
+import extensions.admin
+
 class Test(commands.Cog):
     
     def __init__(self, bot: commands.Bot):
         self._bot = bot
 
     @commands.command()
-    @commands.is_owner()
+    @extensions.admin.blacklisted([181181432989745152])
     async def test(self, ctx: commands.Context):
-        role = ctx.guild.get_role(557816089296502784)
-        logging.info(role)
-        await ctx.author.add_roles(role)
-        await ctx.author.remove_roles(role)
+        await ctx.send('hello world')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

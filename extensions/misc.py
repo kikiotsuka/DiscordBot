@@ -36,7 +36,7 @@ class Misc(commands.Cog):
             logging.error('Something fatal ocurred')
 
     @commands.command()
-    @commands.check(extensions.admin.has_command_perms)
+    @extensions.admin.blacklisted([126485504114950144])
     async def spongecase(self,
                    ctx: commands.Context,
                    member: typing.Optional[discord.Member]=None,
