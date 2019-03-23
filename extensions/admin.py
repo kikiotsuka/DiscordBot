@@ -43,8 +43,11 @@ class Admin(commands.Cog):
                 self._bot.load_extension(extension)
 
     @commands.command()
-    async def cleanup(self, ctx: commands.Context, target: typing.Optional[discord.Member]=None, number: int=1):
-        if not 1 <= number <= 100:
+    async def cleanup(self,
+                      ctx: commands.Context,
+                      target: typing.Optional[discord.Member]=None,
+                      delete_count: int=1):
+        if not 1 <= delete_count <= 100:
             await ctx.send('Error: Expected a number in the range [1, 100]')
             return
         # If the user is invoking it on themselves, don't remove the calling command
@@ -53,27 +56,48 @@ class Admin(commands.Cog):
             skip_first = True
             target = ctx.author
 
+        def predicate(member: discord.Member):
+            return member == target
+        await self._cleanup_aux(ctx, delete_count, skip_first, predicate)
+
+    @commands.command()
+    @commands.is_owner()
+    async def purge(self, ctx: commands.Context, delete_count: int=1):
+        if not 1 <= delete_count <= 100:
+            await ctx.send('Error: expected a number in the range [1, 100]')
+            return
+
+        def predicate(member: discord.Member):
+            return True
+        await self._cleanup_aux(ctx, delete_count, True, predicate)
+
+    async def _cleanup_aux(self,
+                           ctx: commands.Context,
+                           delete_count: int,
+                           skip_first: bool,
+                           predicate: typing.Callable[[discord.Member], bool]):
         to_remove = []
-        async for message in ctx.channel.history(limit=200):
+        async for message in ctx.channel.history(limit=100):
             time_delta = datetime.datetime.now() - message.created_at
             # Cannot remove messages older than 14 days
-            if time_delta.days > 14:
+            if time_delta.days >= 14:
                 break
 
-            if message.author == target:
+            if predicate(message.author):
                 if skip_first:
                     skip_first = False
                     continue
                 to_remove.append(message)
 
-                if len(to_remove) >= number:
+                if len(to_remove) >= delete_count:
                     break
-
+        
         if to_remove:
             await ctx.channel.delete_messages(to_remove)
             await ctx.send('Successfully deleted {} messages'.format(len(to_remove)))
         else:
             await ctx.send('Could not find any messages to delete')
+
 
     @commands.command()
     @commands.is_owner()
