@@ -63,10 +63,9 @@ class Admin(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def purge(self, ctx: commands.Context, delete_count: int=1):
-        if delete_count <= 100:
-            def predicate(member: discord.Member):
-                return True
-        else:
+        def predicate(member: discord.Member):
+            return True
+        if delete_count > 100:
             def exit_predicate(message_id: int):
                 return message_id == delete_count
         await self._cleanup_aux(ctx, delete_count, True, predicate, exit_predicate)
