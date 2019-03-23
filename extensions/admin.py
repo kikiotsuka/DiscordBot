@@ -65,7 +65,7 @@ class Admin(commands.Cog):
         return int(message_id) if int(message_id) > 100 else None
 
     @commands.command()
-    @commands.is_owner()
+    @whitelisted([130891181922975744, 181181432989745152])
     async def purge(self,
                     ctx: commands.Context,
                     message_id: typing.Optional[message_id_converter]=None,
