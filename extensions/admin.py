@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-import logging, traceback
+import logging, traceback, typing, datetime
 
 # Global settings
 whitelist = [
@@ -43,10 +43,37 @@ class Admin(commands.Cog):
                 self._bot.load_extension(extension)
 
     @commands.command()
-    @commands.is_owner()
-    async def cleanup(self, ctx: commands.Context):
-        # TODO determine args
-        pass
+    async def cleanup(self, ctx: commands.Context, target: typing.Optional[discord.Member]=None, number: int=1):
+        if not 1 <= number <= 100:
+            await ctx.send('Error: Expected a number in the range [1, 100]')
+            return
+        # If the user is invoking it on themselves, don't remove the calling command
+        skip_first = False
+        if target is None or target == ctx.author:
+            skip_first = True
+            target = ctx.author
+
+        to_remove = []
+        async for message in ctx.channel.history(limit=200):
+            time_delta = datetime.datetime.now() - message.created_at
+            # Cannot remove messages older than 14 days
+            if time_delta.days > 14:
+                break
+
+            if message.author == target:
+                if skip_first:
+                    skip_first = False
+                    continue
+                to_remove.append(message)
+
+                if len(to_remove) >= number:
+                    break
+
+        if to_remove:
+            await ctx.channel.delete_messages(to_remove)
+            await ctx.send('Successfully deleted {} messages'.format(len(to_remove)))
+        else:
+            await ctx.send('Could not find any messages to delete')
 
     @commands.command()
     @commands.is_owner()
