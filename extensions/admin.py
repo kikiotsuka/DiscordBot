@@ -60,14 +60,25 @@ class Admin(commands.Cog):
             return member == target
         await self._cleanup_aux(ctx, delete_count, skip_first, predicate)
 
+    def message_id_converter(id_arg: str):
+        message_id = int(id_arg)
+        return int(message_id) if int(message_id) > 100 else None
+
     @commands.command()
     @commands.is_owner()
-    async def purge(self, ctx: commands.Context, delete_count: int=1):
+    async def purge(self,
+                    ctx: commands.Context,
+                    message_id: typing.Optional[message_id_converter]=None,
+                    delete_count: int=1):
         def predicate(member: discord.Member):
             return True
-        if delete_count > 100:
-            def exit_predicate(message_id: int):
-                return message_id == delete_count
+        exit_predicate = None
+        if message_id is not None:
+            # Alternative exit condition
+            delete_count = 100
+            def exit_predicate(curr_id: int):
+                return message_id == curr_id
+
         await self._cleanup_aux(ctx, delete_count, True, predicate, exit_predicate)
 
     async def _cleanup_aux(self,
@@ -77,6 +88,7 @@ class Admin(commands.Cog):
                            predicate: typing.Callable[[discord.Member], bool],
                            exit_predicate: typing.Callable[[discord.Message], bool]=None):
         to_remove = []
+        exit_cond = True if exit_predicate is None else False
         async for message in ctx.channel.history(limit=100):
             time_delta = datetime.datetime.now() - message.created_at
             # Cannot remove messages older than 14 days
@@ -92,11 +104,11 @@ class Admin(commands.Cog):
                 if len(to_remove) >= delete_count:
                     break
 
-                if exit_predicate is not None:
-                    if exit_predicate(message.id):
-                        break
+            if exit_predicate is not None and exit_predicate(message.id):
+                exit_cond = True
+                break
         
-        if to_remove:
+        if exit_cond and to_remove:
             await ctx.channel.delete_messages(to_remove)
             await ctx.send('Successfully deleted {} messages'.format(len(to_remove)))
         else:
