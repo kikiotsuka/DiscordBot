@@ -69,7 +69,8 @@ class Admin(commands.Cog):
     async def purge(self,
                     ctx: commands.Context,
                     message_id: typing.Optional[message_id_converter]=None,
-                    delete_count: int=1):
+                    delete_count: int=1,
+                    silent: bool=True):
         def predicate(member: discord.Member):
             return True
         exit_predicate = None
@@ -79,7 +80,7 @@ class Admin(commands.Cog):
             def exit_predicate(curr_id: int):
                 return message_id == curr_id
 
-        await self._cleanup_aux(ctx, delete_count, True, predicate, exit_predicate)
+        await self._cleanup_aux(ctx, delete_count, silent, predicate, exit_predicate)
 
     async def _cleanup_aux(self,
                            ctx: commands.Context,
@@ -110,9 +111,9 @@ class Admin(commands.Cog):
         
         if exit_cond and to_remove:
             await ctx.channel.delete_messages(to_remove)
-            await ctx.send('Successfully deleted {} messages'.format(len(to_remove)))
+            await ctx.send('Successfully deleted {} messages'.format(len(to_remove)), delete_after=5.0)
         else:
-            await ctx.send('Could not find any messages to delete')
+            await ctx.send('Could not find any messages to delete', delete_after=5.0)
 
 
     @commands.command()
