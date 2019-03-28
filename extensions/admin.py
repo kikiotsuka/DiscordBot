@@ -35,7 +35,8 @@ class Admin(commands.Cog):
         self._bot = bot
         self._initial_extensions = [
             'extensions.misc',
-            'extensions.uptime'
+            'extensions.uptime',
+            'extensions.waifu'
         ]
 
         for extension in self._initial_extensions:
