@@ -111,11 +111,6 @@ class Admin(commands.Cog):
                 exit_cond = True
                 break
         
-        print('===start')
-        for m in to_remove:
-            print(m.content)
-        print('===end')
-
         if exit_cond and to_remove:
             await ctx.channel.delete_messages(to_remove)
             status_message = 'Successfully deleted {} messages (including the invoking command)'
