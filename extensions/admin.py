@@ -50,58 +50,60 @@ class Admin(commands.Cog):
         if not 1 <= delete_count <= 100:
             await ctx.send('Error: Expected a number in the range [1, 100]')
             return
-        # If the user is invoking it on themselves, don't remove the calling command
-        skip_first = False
         if target is None or target == ctx.author:
-            skip_first = True
             target = ctx.author
 
         def predicate(member: discord.Member):
             return member == target
-        await self._cleanup_aux(ctx, delete_count, skip_first, predicate)
-
-    def message_id_converter(id_arg: str):
-        message_id = int(id_arg)
-        return int(message_id) if int(message_id) > 100 else None
+        await self._cleanup_aux(ctx, delete_count, predicate)
 
     @commands.command()
     @whitelisted([130891181922975744, 181181432989745152])
-    async def purge(self,
-                    ctx: commands.Context,
-                    message_id: typing.Optional[message_id_converter]=None,
-                    delete_count: int=1,
-                    silent: bool=True):
+    async def purge(self, ctx: commands.Context, deletion_value: int=1, silent: bool=True):
+        # Rough estimate
+        if len(str(deletion_value)) > 15:
+            message_id = deletion_value
+            delete_count = 100
+            # Alternative exit condition
+            def exit_predicate(curr_id: int):
+                return message_id == curr_id
+        elif deletion_value <= 100:
+            message_id = None
+            delete_count = deletion_value
+        else:
+            await ctx.send('Cannot delete more than 100 messages')
+            return
+
         def predicate(member: discord.Member):
             return True
         exit_predicate = None
-        if message_id is not None:
-            # Alternative exit condition
-            delete_count = 100
-            def exit_predicate(curr_id: int):
-                return message_id == curr_id
 
-        await self._cleanup_aux(ctx, delete_count, silent, predicate, exit_predicate)
+        await self._cleanup_aux(ctx, delete_count + 1, predicate, exit_predicate)
 
     async def _cleanup_aux(self,
                            ctx: commands.Context,
                            delete_count: int,
-                           skip_first: bool,
                            predicate: typing.Callable[[discord.Member], bool],
                            exit_predicate: typing.Callable[[discord.Message], bool]=None):
         to_remove = []
         exit_cond = True if exit_predicate is None else False
+
+        delete_invoking_command = True
         async for message in ctx.channel.history(limit=100):
             time_delta = datetime.datetime.now() - message.created_at
             # Cannot remove messages older than 14 days
             if time_delta.days >= 14:
                 break
 
+            if delete_invoking_command and message.content[1:] in ['cleanup', 'purge']:
+                to_remove.append(message)
+                delete_invoking_command = False
+                continue
+
             if predicate(message.author):
-                if skip_first:
-                    skip_first = False
-                    continue
                 to_remove.append(message)
 
+                # +1 to include the invoking command
                 if len(to_remove) >= delete_count:
                     break
 
@@ -109,9 +111,15 @@ class Admin(commands.Cog):
                 exit_cond = True
                 break
         
+        print('===start')
+        for m in to_remove:
+            print(m.content)
+        print('===end')
+
         if exit_cond and to_remove:
             await ctx.channel.delete_messages(to_remove)
-            await ctx.send('Successfully deleted {} messages'.format(len(to_remove)), delete_after=5.0)
+            status_message = 'Successfully deleted {} messages (including the invoking command)'
+            await ctx.send(status_message.format(len(to_remove)), delete_after=5.0)
         else:
             await ctx.send('Could not find any messages to delete', delete_after=5.0)
 
