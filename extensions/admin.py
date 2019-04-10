@@ -102,7 +102,7 @@ class Admin(commands.Cog):
                 to_remove.append(message)
 
                 # +1 to include the invoking command
-                if len(to_remove) >= delete_count:
+                if len(to_remove) > delete_count:
                     break
 
             if exit_predicate is not None and exit_predicate(message.id):
