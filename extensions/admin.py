@@ -60,26 +60,25 @@ class Admin(commands.Cog):
 
     @commands.command()
     @whitelisted([130891181922975744, 181181432989745152])
-    async def purge(self, ctx: commands.Context, deletion_value: int=1, silent: bool=True):
-        # Rough estimate
-        if len(str(deletion_value)) > 15:
-            message_id = deletion_value
-            delete_count = 100
-            # Alternative exit condition
-            def exit_predicate(curr_id: int):
-                return message_id == curr_id
-        elif deletion_value <= 100:
-            message_id = None
-            delete_count = deletion_value
-        else:
+    async def purge(self, ctx: commands.Context, deletion_value: int=1):
+        delete_count, exit_predicate = self._stop_predicate(deletion_value)
+        if delete_count == -1:
             await ctx.send('Cannot delete more than 100 messages')
             return
 
         def predicate(member: discord.Member):
             return True
-        exit_predicate = None
 
-        await self._cleanup_aux(ctx, delete_count + 1, predicate, exit_predicate)
+        await self._cleanup_aux(ctx, delete_count, predicate, exit_predicate)
+
+    def _stop_predicate(self, deletion_value: int):
+        if len(str(deletion_value)) > 15:
+            def exit_predicate(curr_id: int):
+                return deletion_value == curr_id
+            return 100, exit_predicate
+        if deletion_value > 100:
+            return -1, None
+        return deletion_value, None
 
     async def _cleanup_aux(self,
                            ctx: commands.Context,
@@ -89,16 +88,14 @@ class Admin(commands.Cog):
         to_remove = []
         exit_cond = True if exit_predicate is None else False
 
-        delete_invoking_command = True
         async for message in ctx.channel.history(limit=100):
             time_delta = datetime.datetime.now() - message.created_at
             # Cannot remove messages older than 14 days
             if time_delta.days >= 14:
                 break
 
-            if delete_invoking_command and message.content[1:] in ['cleanup', 'purge']:
+            if message == ctx.message:
                 to_remove.append(message)
-                delete_invoking_command = False
                 continue
 
             if predicate(message.author):
@@ -112,7 +109,8 @@ class Admin(commands.Cog):
                 exit_cond = True
                 break
         
-        if exit_cond and to_remove:
+        # Check len > 1 because it deletes the invoking command
+        if exit_cond and len(to_remove) > 1:
             await ctx.channel.delete_messages(to_remove)
             status_message = 'Successfully deleted {} messages (including the invoking command)'
             await ctx.send(status_message.format(len(to_remove)), delete_after=5.0)
