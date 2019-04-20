@@ -86,15 +86,17 @@ class Admin(commands.Cog):
                            predicate: typing.Callable[[discord.Member], bool],
                            exit_predicate: typing.Callable[[discord.Message], bool]=None):
         to_remove = []
+        err_msg = 'Could not find any messages to delete'
         exit_cond = True if exit_predicate is None else False
 
         async for message in ctx.channel.history(limit=100):
             time_delta = datetime.datetime.now() - message.created_at
             # Cannot remove messages older than 14 days
             if time_delta.days >= 14:
+                err_msg = 'You can\'t delete messages older than 14 days'
                 break
 
-            if message == ctx.message:
+            if message.id == ctx.message.id:
                 to_remove.append(message)
                 continue
 
@@ -115,7 +117,7 @@ class Admin(commands.Cog):
             status_message = 'Successfully deleted {} messages (including the invoking command)'
             await ctx.send(status_message.format(len(to_remove)), delete_after=5.0)
         else:
-            await ctx.send('Could not find any messages to delete', delete_after=5.0)
+            await ctx.send(err_msg, delete_after=5.0)
 
 
     @commands.command()
