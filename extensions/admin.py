@@ -43,6 +43,23 @@ class Admin(commands.Cog):
             if extension not in self._bot.extensions:
                 self._bot.load_extension(extension)
 
+    @commands.Cog.listener()
+    async def on_guild_role_update(self, before: discord.Role, after: discord.Role):
+        immutable = 419778682081771525
+        
+        async for entry in before.guild.audit_logs(limit=5, action=discord.AuditLogAction.role_update):
+            print(entry.user.bot, entry.target, before.id)
+            if not entry.user.bot and entry.target.id == before.id:
+                if before.id == immutable:
+                    await after.edit(name=before.name,
+                                     permissions=before.permissions,
+                                     color=before.color)
+                    logging.info('Revert: {}: {}, {}: {}, {}: {}, {}: {}, {}: {}'.format(
+                        after.name, before.name,
+                        after.permissions, before.permissions,
+                        after.color, before.color))
+                    break
+
     @commands.command()
     async def cleanup(self,
                       ctx: commands.Context,
