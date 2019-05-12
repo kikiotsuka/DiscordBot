@@ -19,10 +19,11 @@ class Waifus(commands.Cog):
     async def on_message(self, message: discord.Message):
         if self._WAIFU_GACHA_CHANNEL is None:
             self._WAIFU_GACHA_CHANNEL = self._bot.get_channel(self._WAIFU_GACHA_CHANNEL_ID)
+
         if message.author.bot:
             pass
         else:
-            if message.content.lower() in ['$w', '$h'] and message.channel.id != self._WAIFU_GACHA_CHANNEL:
+            if message.content.lower() in ['$w', '$h'] and message.channel != self._WAIFU_GACHA_CHANNEL:
                 await message.channel.send(self._WRONG_CHANNEL_MSG.format(self._WAIFU_GACHA_CHANNEL.mention,
                                                                           message.author.mention))
                 await self._WAIFU_GACHA_CHANNEL.send(self._REPORT_MSG.format(message.author.mention,
