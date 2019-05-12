@@ -121,14 +121,6 @@ class Misc(commands.Cog):
         logging.info('Author: {}; Content: {}'.format(message.author, message.content))
         # Ignore anything from a bot
         if message.author.bot:
-            # Snipe waifu
-            if message.embeds:
-                e = message.embeds[0]
-                print(e.description)
-                if 'Steins;Gate<:female:452463537508450304>' in e.description:
-                    # todo snipe
-                    pass
-                    #message.add_reaction()
             return
 
         channel = message.channel
