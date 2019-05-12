@@ -10,7 +10,7 @@ class Waifus(commands.Cog):
         self._bot = bot
         self._WAIFU_GACHA_CHANNEL_ID = 557963012472832021
         self._WAIFU_GACHA_CHANNEL = None
-        self._WRONG_CHANNEL_MSG = 'You are rolling in the wrong channel {}!'
+        self._WRONG_CHANNEL_MSG = 'You should be rolling in {}, {}!'
         self._REPORT_MSG = '{} just rolled in {}!'
         # heart reactions
         #'heart, cupid, two_hearts, heartpulse, heartbeat, sparkling_heart, hearts'
@@ -23,7 +23,8 @@ class Waifus(commands.Cog):
             pass
         else:
             if message.content.lower() in ['$w', '$h'] and message.channel.id != self._WAIFU_GACHA_CHANNEL:
-                await message.channel.send(self._WRONG_CHANNEL_MSG.format(message.author.mention))
+                await message.channel.send(self._WRONG_CHANNEL_MSG.format(self._WAIFU_GACHA_CHANNEL.mention,
+                                                                          message.author.mention))
                 await self._WAIFU_GACHA_CHANNEL.send(self._REPORT_MSG.format(message.author.mention,
                                                                              message.channel.mention))
 
