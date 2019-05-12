@@ -49,7 +49,9 @@ class Waifus(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction: discord.Reaction, member: discord.Member):
-        if reaction.message.channel == self._WAIFU_GACHA_CHANNEL and ord(reaction.emoji) in self._HEART_REACTIONS:
+        if reaction.message.channel == self._WAIFU_GACHA_CHANNEL and \
+           not reaction.custom_emoji and \
+           ord(reaction.emoji) in self._HEART_REACTIONS:
             logging.info('Waifu rolled')
             waifu = reaction.message.embeds[0].author.name
             self._waifu_dict[waifu] += 1
