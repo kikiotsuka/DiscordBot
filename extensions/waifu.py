@@ -20,8 +20,10 @@ class Waifus(commands.Cog):
         self._ROLL_THRESHOLD = 10
         self._WAIFU_RECORDS_FILE = 'waifu.pickle'
         if os.path.isfile(self._WAIFU_RECORDS_FILE):
+            logging.info('Successfully loaded waifu data')
             self._waifu_dict = pickle.load(open(self._WAIFU_RECORDS_FILE, 'rb'))
         else:
+            logging.info('No waifu data found, initializing empty dictionary')
             self._waifu_dict = defaultdict(int)
 
 
