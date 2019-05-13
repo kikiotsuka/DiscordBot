@@ -36,7 +36,8 @@ class Admin(commands.Cog):
         self._initial_extensions = [
             'extensions.misc',
             'extensions.uptime',
-            'extensions.waifu'
+            'extensions.waifu',
+            'extensions.image'
         ]
 
         for extension in self._initial_extensions:
