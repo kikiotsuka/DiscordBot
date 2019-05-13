@@ -124,12 +124,13 @@ class ImageExtension(commands.Cog):
                 await ctx.send('Missing image link or attachment')
 
         if quantize_fname is not None:
-            logging.info('Quantizing image with depth: ' + str(depth_limit))
-            # Create KD-Tree of bit buckets
-            img = Image.open(quantize_fname).convert('RGB')
-            output = self._quantize_image(img, depth_limit)
-            output.save(quantize_fname)
-            await ctx.send(file=discord.File(quantize_fname))
+            async with ctx.typing():
+                logging.info('Quantizing image with depth: ' + str(depth_limit))
+                # Create KD-Tree of bit buckets
+                img = Image.open(quantize_fname).convert('RGB')
+                output = self._quantize_image(img, depth_limit)
+                output.save(quantize_fname)
+                await ctx.send(file=discord.File(quantize_fname))
 
         # In case of error, cleanup file
         try:

@@ -18,7 +18,7 @@ class Test(commands.Cog):
     @commands.command()
     @commands.is_owner()
     async def echo(Self, ctx: commands.Context):
-        await  ctx.send('Hello world {}'.format(random.randint(0, 100)))
+        await ctx.trigger_typing()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
