@@ -35,7 +35,6 @@ class Waifus(commands.Cog):
         if message.author.bot:
             if message.content.startswith(chr(128150)):
                 waifu = message.content.split(r'**')[3]
-                logging.info('Waifu: {} has been claimed'.format(waifu))
                 if waifu in self._waifu_dict:
                     del self._waifu_dict[waifu]
                     self._dump_records()
@@ -52,10 +51,10 @@ class Waifus(commands.Cog):
         if reaction.message.channel == self._WAIFU_GACHA_CHANNEL and \
            not reaction.custom_emoji and \
            ord(reaction.emoji) in self._HEART_REACTIONS:
-            logging.info('Waifu rolled')
             waifu = reaction.message.embeds[0].author.name
             self._waifu_dict[waifu] += 1
             if self._waifu_dict[waifu] >= self._MAX_APPEARANCES:
+                await reaction.message.channel.send('Claiming {} because nobody wants this trash'.format(waifu))
                 await reaction.message.add_reaction(reaction)
             self._roll_counter += 1
             if self._roll_counter >= self._ROLL_THRESHOLD:
