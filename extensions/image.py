@@ -65,27 +65,28 @@ def construct_tree(pixels: [(int,)], depth_limit: int, depth: int=0):
     root.right = construct_tree(pixels[median_coord:], depth_limit, depth + 1)
     return root
 
-class AttachmentConverter(commands.Converter):
-    async def convert(self, ctx: commands.Context, argument: str):
-        import pdb
-        pdb.set_trace()
-        if ctx.message.attachments:
-            attachment = ctx.message.attachments[0]
-            return attachment
-        if argument and 'http' in argument:
-            return argument
-        return None
-
 class ImageExtension(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot = bot
 
     @commands.command(help='https://en.wikipedia.org/wiki/Color_quantization')
-    async def quantize(self,
-                       ctx: commands.Context,
-                       source: AttachmentConverter,
-                       buckets: typing.Optional[int]=4):
+    async def quantize(self, ctx: commands.Context, *args: str):
+        # Parse arguments
+        buckets = 4
+        if ctx.message.attachments:
+            source = ctx.message.attachments[0]
+            if args:
+                try:
+                    buckets = int(args[0])
+                except: pass
+        elif ctx.message.content:
+            source = args[0]
+            try:
+                buckets = int(args[1])
+            except: pass
+
+        # Calculate max depth of tree from number of buckets
         try:
             depth_limit = int(math.log2(buckets))
         except:
@@ -93,17 +94,10 @@ class ImageExtension(commands.Cog):
 
         quantize_fname = None
 
-        print('BUCKET', buckets)
-
         # Retrieve file to quantize
-        #if ctx.message.attachments:
         if type(source) is discord.Attachment:
             attachment = source
             if attachment.height is not None:
-                try:
-                    depth_limit = int(math.log2(url))
-                except: pass
-                logging.info('Found an image, starting image processing')
                 written = await attachment.save(open(attachment.filename, 'wb'))
                 if written != attachment.size:
                     await channel.send('Unexpected error processing attachment, please try again.')
@@ -119,7 +113,7 @@ class ImageExtension(commands.Cog):
                 else:
                     ext = url.split('.')[-1]
                     if ext not in ['png', 'jpg', 'jpeg', 'gif']:
-                        await ctx.send('Expected a link to an image but found something else')
+                        await ctx.send('Sorry, I only accept png, jpg, jpeg, and gif files')
                     quantize_fname = 'quantize.' + ext
                     try:
                         urllib.request.urlretrieve(url, quantize_fname)
@@ -136,7 +130,11 @@ class ImageExtension(commands.Cog):
             output = self._quantize_image(img, depth_limit)
             output.save(quantize_fname)
             await ctx.send(file=discord.File(quantize_fname))
+
+        # In case of error, cleanup file
+        try:
             os.remove(quantize_fname)
+        except: pass
 
     def _quantize_image(self, img: Image, depth_limit: int):
         pixels = list(img.getdata())
