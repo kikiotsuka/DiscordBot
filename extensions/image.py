@@ -36,7 +36,6 @@ def construct_tree(pixels: [(int,)], depth_limit: int, depth: int=0):
     if depth >= depth_limit:
         total = list(functools.reduce(lambda a, b: [_a + _b for _a, _b in zip(a, b)], pixels))
         average = tuple(v // len(pixels) for v in total)
-        print(average)
         return KDNode(None, None, average)
 
     # Track best range
