@@ -15,9 +15,13 @@ class Waifus(commands.Cog):
         # heart reactions
         # heart, cupid, two_hearts, heartpulse, heartbeat, sparkling_heart, hearts
         self._HEART_REACTIONS= [10084, 128152, 128149, 128151, 128147, 128150, 9829]
-        self._roll_counter = 0
-        self._MAX_APPEARANCES = 10
+        # Track how many times the waifu should appear before auto-claiming
+        self._MAX_APPEARANCES = 6
+        # Track how often we should commit the data
         self._ROLL_THRESHOLD = 10
+        # Tracks rolls for when to commit
+        self._roll_counter = 0
+        # Stores waifu roll counts for when bot restarts
         self._WAIFU_RECORDS_FILE = 'waifu.pickle'
         if os.path.isfile(self._WAIFU_RECORDS_FILE):
             logging.info('Successfully loaded waifu data')
