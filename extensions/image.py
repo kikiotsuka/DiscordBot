@@ -2,7 +2,9 @@ import discord
 from discord.ext import commands
 
 from PIL import Image
-import logging, os, typing, urllib.request, math, functools
+from sklearn.cluster import KMeans
+from sklearn.neighbors import KDTree
+import logging, os, typing, urllib.request, math, functools, numpy
 
 class KDNode:
     def __init__(self, key: (int,), key_idx: int, average: (int,)=None):
@@ -69,21 +71,105 @@ class ImageExtension(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self._bot = bot
 
-    @commands.command(help='https://en.wikipedia.org/wiki/Color_quantization')
-    async def quantize(self, ctx: commands.Context, *args: str):
-        # Parse arguments
-        buckets = 4
-        if ctx.message.attachments:
-            source = ctx.message.attachments[0]
+    def _parse_arguments(self, attachments: [discord.Attachment], args: [str], int_arg: int):
+        if attachments:
+            source = attachments[0]
             if args:
                 try:
-                    buckets = int(args[0])
+                    int_arg = int(args[0])
                 except: pass
-        elif ctx.message.content:
+        elif args:
             source = args[0]
             try:
-                buckets = int(args[1])
+                int_arg = int(args[1])
             except: pass
+        return source, int_arg
+
+    async def _retrieve_image(self, source: typing.Union[discord.Attachment, str]):
+        # Retrieve file to quantize
+        quantize_fname = None
+        if type(source) is discord.Attachment:
+            attachment = source
+            if attachment.height is not None:
+                written = await attachment.save(open(attachment.filename, 'wb'))
+                if written != attachment.size:
+                    return (None, 'Unexpected error processing attachment, please try again.')
+                else:
+                    quantize_fname = attachment.filename
+            else:
+                return (None, 'Expected an image attachment but found something else')
+        else:
+            url = source
+            if 'http' in url:
+                if 'cdn.discordapp' in url:
+                    return (None, 'Sorry, bots aren\'t allowed to access discord urls')
+                else:
+                    ext = url.split('.')[-1]
+                    if ext not in ['png', 'jpg', 'jpeg', 'gif']:
+                        return (None, 'Sorry, I only accept png, jpg, jpeg, and gif files')
+                    quantize_fname = 'quantize.' + ext
+                    try:
+                        urllib.request.urlretrieve(url, quantize_fname)
+                    except urllib.error.HTTPError as e:
+                        return (None, 'There was an error retrieving the image from that url.')
+            else:
+                return (None, 'Missing image link or attachment')
+        return (quantize_fname, 'Success')
+
+    @commands.command(help='https://en.wikipedia.org/wiki/Image_segmentation')
+    async def segment(self, ctx: commands.Context, *args: str):
+        clusters = 8
+        source, clusters = self._parse_arguments(ctx.message.attachments, args, clusters)
+
+        segment_fname, status = await self._retrieve_image(source)
+        if segment_fname is None:
+            await ctx.send(status)
+
+        if clusters not in [4, 8, 16]:
+            await ctx.send('Sorry, the cluster needs to be 4, 8, or 16.')
+
+        if segment_fname is not None:
+            await ctx.send('Doing a thicc calculation, this may take a while...', delete_after=15)
+            async with ctx.typing():
+                logging.info('Segmenting image with {} clusters'.format(clusters))
+                img = Image.open(segment_fname).convert('RGB')
+                output = self._segment_image(img, clusters)
+                output.save(segment_fname)
+                await ctx.send(file=discord.File(segment_fname))
+
+        # In case of error, cleanup file
+        try:
+            os.remove(segment_fname)
+        except: pass
+
+    def _segment_image(self, img: Image, clusters: int):
+        MAX_DIM = (800, 600)
+        if img.width > MAX_DIM[0] or img.height > MAX_DIM[1]:
+            resize_ratio = min(MAX_DIM[0] / img.width, MAX_DIM[1] / img.height)
+            new_size = (int(resize_ratio * img.width), int(resize_ratio * img.height))
+            img = img.resize(new_size)
+            print('Image was resized to ({}, {})'.format(*new_size))
+
+        pixel_data = img.getdata()
+
+        kmeans = KMeans(n_clusters=clusters)
+        kmeans.fit(pixel_data)
+
+        color_palette = list(map(lambda x: tuple(int(v) for v in x), kmeans.cluster_centers_))
+        tree = KDTree(numpy.asarray(color_palette))
+        output = Image.new(mode='RGB', size=(img.width, img.height))
+        plist = list(map(lambda x: color_palette[tree.query([x], return_distance=False)[0][0]], pixel_data))
+        output.putdata(plist)
+        return output
+
+    @commands.command(help='https://en.wikipedia.org/wiki/Color_quantization')
+    async def quantize(self, ctx: commands.Context, *args: str):
+        buckets = 4
+        source, buckets = self._parse_arguments(ctx.message.attachments, args, buckets)
+
+        quantize_fname, status = await self._retrieve_image(source)
+        if quantize_fname is None:
+            await ctx.send(status)
 
         # Calculate max depth of tree from number of buckets
         try:
@@ -91,38 +177,8 @@ class ImageExtension(commands.Cog):
         except:
             depth_limit = 2 # log2 (4 color pallette)
 
-        quantize_fname = None
-
-        # Retrieve file to quantize
-        if type(source) is discord.Attachment:
-            attachment = source
-            if attachment.height is not None:
-                written = await attachment.save(open(attachment.filename, 'wb'))
-                if written != attachment.size:
-                    await channel.send('Unexpected error processing attachment, please try again.')
-                else:
-                    quantize_fname = attachment.filename
-            else:
-                await ctx.send('Expected an image attachment but found something else')
-        else:
-            url = source
-            if 'http' in url:
-                if 'cdn.discordapp' in url:
-                    await ctx.send('Sorry, bots aren\'t allowed to access discord urls')
-                else:
-                    ext = url.split('.')[-1]
-                    if ext not in ['png', 'jpg', 'jpeg', 'gif']:
-                        await ctx.send('Sorry, I only accept png, jpg, jpeg, and gif files')
-                    quantize_fname = 'quantize.' + ext
-                    try:
-                        urllib.request.urlretrieve(url, quantize_fname)
-                    except urllib.error.HTTPError as e:
-                        quantize_fname = None
-                        await ctx.send('There was an error retrieving the image from that url.')
-            else:
-                await ctx.send('Missing image link or attachment')
-
         if quantize_fname is not None:
+            await ctx.send('Doing a thicc calculation, this may take a while...', delete_after=15)
             async with ctx.typing():
                 logging.info('Quantizing image with depth: ' + str(depth_limit))
                 # Create KD-Tree of bit buckets
