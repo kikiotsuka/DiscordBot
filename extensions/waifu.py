@@ -43,7 +43,7 @@ class Waifus(commands.Cog):
                     del self._waifu_dict[waifu]
                     self._dump_records()
         else:
-            if message.content.lower() in ['$w', '$h'] and message.channel != self._WAIFU_GACHA_CHANNEL:
+            if message.content.lower() in ['$w', '$h', '$m'] and message.channel != self._WAIFU_GACHA_CHANNEL:
                 await message.channel.send(self._WRONG_CHANNEL_MSG.format(self._WAIFU_GACHA_CHANNEL.mention,
                                                                           message.author.mention))
                 await self._WAIFU_GACHA_CHANNEL.send(self._REPORT_MSG.format(message.author.mention,
@@ -54,7 +54,8 @@ class Waifus(commands.Cog):
     async def on_reaction_add(self, reaction: discord.Reaction, member: discord.Member):
         if reaction.message.channel == self._WAIFU_GACHA_CHANNEL and \
            not reaction.custom_emoji and \
-           ord(reaction.emoji) in self._HEART_REACTIONS:
+           ord(reaction.emoji) in self._HEART_REACTIONS and\
+           member.bot:
             waifu = reaction.message.embeds[0].author.name
             self._waifu_dict[waifu] += 1
             if self._waifu_dict[waifu] >= self._MAX_APPEARANCES:
