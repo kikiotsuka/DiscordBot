@@ -20,6 +20,9 @@ class Audio(commands.Cog):
         await ctx.message.delete()
         vc = await self._get_ch(ctx.guild, ctx.author.voice.channel)
 
+        if vc is None:
+            await ctx.send('You need to be in a channel for me to work')
+
         if not fname.endswith('.mp3'):
             fname += '.mp3'
 
@@ -37,13 +40,17 @@ class Audio(commands.Cog):
         if self._bot.voice_clients:
             for ch in self._bot.voice_clients:
                 if ch.guild == guild:
-                    if ch.channel == channel:
+                    if ch.channel == channel or channel is None:
                         logging.info('Already in channel')
                         return ch
-                    logging.info('Moving channels')
-                    ch.disconnect()
-        logging.info('Joining channel')
-        return await channel.connect()
+                    if channel is not None:
+                        logging.info('Moving channels')
+                        ch.disconnect()
+        if channel is not None:
+            logging.info('Joining channel')
+            return await channel.connect()
+        logging.info('Caller is not in a channel')
+        return None
 
 def setup(bot: commands.Bot):
     bot.add_cog(Audio(bot))
