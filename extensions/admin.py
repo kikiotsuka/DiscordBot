@@ -37,7 +37,8 @@ class Admin(commands.Cog):
             'extensions.misc',
             'extensions.uptime',
             'extensions.waifu',
-            'extensions.image'
+            'extensions.image',
+            'extensions.audio'
         ]
 
         for extension in self._initial_extensions:
