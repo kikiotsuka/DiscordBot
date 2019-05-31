@@ -31,7 +31,7 @@ class Audio(commands.Cog):
             else:
                 vc.source = source
         else:
-            await ctx.send('That mp3 file doesn\'t exist!', delete_after=1.5)
+            await ctx.send('{} doesn\'t exist!'.format(fname), delete_after=1.5)
 
     async def _get_ch(self, guild: discord.Guild, channel: discord.VoiceChannel):
         if self._bot.voice_clients:
