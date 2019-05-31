@@ -18,7 +18,9 @@ class Audio(commands.Cog):
     @commands.command(aliases=['p'])
     async def play(self, ctx: commands.Context, fname: str='tuturuu.mp3'):
         await ctx.message.delete()
-        vc = await self._get_ch(ctx.guild, ctx.author.voice.channel)
+        
+        vc_ch = ctx.author.voice.channel if ctx.author.voice is not None else None
+        vc = await self._get_ch(ctx.guild, vc_ch)
 
         if vc is None:
             await ctx.send('You need to be in a channel for me to work')
