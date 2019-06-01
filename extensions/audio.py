@@ -39,19 +39,15 @@ class Audio(commands.Cog):
             await ctx.send('{} doesn\'t exist!'.format(fname), delete_after=1.5)
 
     async def _get_ch(self, guild: discord.Guild, channel: discord.VoiceChannel):
-        if self._bot.voice_clients:
-            for ch in self._bot.voice_clients:
-                if ch.guild == guild:
-                    if ch.channel == channel or channel is None:
-                        logging.info('Already in channel')
-                        return ch
-                    if channel is not None:
-                        logging.info('Moving channels')
-                        ch.disconnect()
         if channel is not None:
-            logging.info('Joining channel')
+            if guild.voice_client:
+                if guild.voice_client.channel == channel:
+                    return guild.voice_client
+                await guild.voice_client.disconnect()
             return await channel.connect()
-        logging.info('Caller is not in a channel')
+        
+        if guild.voice_client is not None:
+            return guild.voice_client
         return None
 
 def setup(bot: commands.Bot):
