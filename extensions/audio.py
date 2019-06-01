@@ -22,7 +22,7 @@ class Audio(commands.Cog):
         await ctx.send('Reset the internal state')
 
     @commands.command(aliases=['p'])
-    async def play(self, ctx: commands.Context, fname: str='tuturuu.mp3'):
+    async def play(self, ctx: commands.Context, fname: str='hellomakise.mp3'):
         await ctx.message.delete()
         
         vc_ch = ctx.author.voice.channel if ctx.author.voice is not None else None
