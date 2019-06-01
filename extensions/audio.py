@@ -40,7 +40,7 @@ class Audio(commands.Cog):
 
     async def _get_ch(self, guild: discord.Guild, channel: discord.VoiceChannel):
         if channel is not None:
-            if guild.voice_client:
+            if guild.voice_client is not None and guild.voice_client.is_connected():
                 if guild.voice_client.channel == channel:
                     return guild.voice_client
                 await guild.voice_client.disconnect()
