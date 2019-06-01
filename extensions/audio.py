@@ -15,6 +15,12 @@ class Audio(commands.Cog):
         l = ', '.join(filter(lambda x: x.endswith('.mp3'), os.listdir(self._AUDIO_DIR)))
         await ctx.send('`{}`'.format(l))
 
+    @commands.command(description='If the bot does not come into the channel use me')
+    async def preset(self, ctx: commands.Context):
+        if ctx.guild.voice_client is not None:
+            await ctx.guild.voice_client.disconnect()
+        await ctx.send('Reset the internal state')
+
     @commands.command(aliases=['p'])
     async def play(self, ctx: commands.Context, fname: str='tuturuu.mp3'):
         await ctx.message.delete()

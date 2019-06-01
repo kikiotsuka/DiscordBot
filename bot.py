@@ -18,12 +18,16 @@ BOT_DESCRIPTION = 'Bot for personal use with random commands'
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, description=BOT_DESCRIPTION)
 
 # Setup logging
-logging.getLogger().setLevel(logging.INFO)
-logging.basicConfig(stream=sys.stdout)
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 @bot.event
 async def on_ready():
     logging.info('Bot is ready')
+    logging.info('Running version {}'.format(discord.__version__))
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error: discord.DiscordException):
