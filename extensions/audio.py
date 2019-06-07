@@ -35,9 +35,29 @@ class Audio(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
-    async def padd(self, ctx: commands.Context, owner: str='unknown'):
+    async def padd(self, ctx: commands.Context, owner: str='', *args):
+        newkey = '--new' in args
+        overwrite = '--overwrite' in args
+
+        if not owner:
+            await ctx.send('Error, needs an owner name')
+            return
+
+        # Check if new key should be added
+        if owner not in self._whois.keys() and not newkey:
+            await ctx.send('Error, that key does not exist. Use `--new` for adding a new key')
+            return
+
+        # Grab audio file
         audio_file = ctx.message.attachments[0] if ctx.message.attachments else None
         if audio_file is not None and audio_file.filename.endswith('.mp3'):
+            # Check if file exists or not
+            if not overwrite:
+                for files in self._whois.values():
+                    if audio_file.filename in files:
+                        await ctx.send('Error, file already exists. Use `--overwrite` to overwrite file')
+                        return
+
             await audio_file.save(self._AUDIO_DIR + audio_file.filename)
             self._whois[owner].append(audio_file.filename[:-4])
             self._whois[owner].sort()
