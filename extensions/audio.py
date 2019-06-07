@@ -54,7 +54,7 @@ class Audio(commands.Cog):
             # Check if file exists or not
             if not overwrite:
                 for files in self._whois.values():
-                    if audio_file.filename in files:
+                    if audio_file.filename[:-4] in files:
                         await ctx.send('Error, file already exists. Use `--overwrite` to overwrite file')
                         return
 
