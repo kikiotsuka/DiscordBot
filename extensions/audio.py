@@ -1,19 +1,62 @@
 import discord
 from discord.ext import commands
 
-import logging, os
+import logging, os, collections, pickle, typing
 
 class Audio(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self._bot = bot
         self._AUDIO_DIR = 'audio/'
+        self._MAP_FILE = self._AUDIO_DIR + 'whois.pickle'
+        self._whois = self._map_audio()
 
+    def _map_audio(self):
+        if os.path.isfile(self._MAP_FILE):
+            return pickle.load(open(self._MAP_FILE, 'rb'))
+        return collections.defaultdict(list)
+
+    def _update_map_audio(self):
+        with open(self._MAP_FILE, 'wb') as f:
+            pickle.dump(self._whois, f)
 
     @commands.command()
-    async def plist(self, ctx: commands.Context):
-        l = ', '.join(filter(lambda x: x.endswith('.mp3'), os.listdir(self._AUDIO_DIR)))
-        await ctx.send('`{}`'.format(l))
+    @commands.is_owner()
+    async def pchangekey(self, ctx: commands.Context, *args):
+        if len(args) != 2:
+            await ctx.send('Usage: <old key> <new key>')
+        else:
+            if args[0] in self._whois:
+                self._whois[args[1]] = self._whois.pop(args[0])
+                self._update_map_audio()
+                await ctx.send('Updated dictionary key from {} to {}'.format(args[0], args[1]))
+            else:
+                await ctx.send('Error: old key not found, see `plist -u` for key list')
+
+    @commands.command()
+    @commands.is_owner()
+    async def padd(self, ctx: commands.Context, owner: str='unknown'):
+        audio_file = ctx.message.attachments[0] if ctx.message.attachments else None
+        if audio_file is not None and audio_file.filename.endswith('.mp3'):
+            await audio_file.save(self._AUDIO_DIR + audio_file.filename)
+            self._whois[owner].append(audio_file.filename[:-4])
+            self._whois[owner].sort()
+            self._update_map_audio()
+            await ctx.send('Added file to the audio index')
+        else:
+            await ctx.send('Error, missing audio file')
+
+    @commands.command()
+    async def plist(self, ctx: commands.Context, arg: typing.Optional[str]):
+        data = '```'
+        if arg and arg == '-u':
+            for key in sorted(self._whois.keys()):
+                data += '{} -> {} entries\n'.format(key, len(self._whois[key]))
+        else:
+            for key in sorted(self._whois.keys()):
+                data += '{}:\n\t{}\n'.format(key, ', '.join(self._whois[key]))
+        data += '```'
+        await ctx.send(data)
 
     @commands.command(help='If the bot does not come into the channel use me')
     async def preset(self, ctx: commands.Context):
