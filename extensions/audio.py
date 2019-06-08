@@ -59,10 +59,11 @@ class Audio(commands.Cog):
                         return
 
             await audio_file.save(self._AUDIO_DIR + audio_file.filename)
-            self._whois[owner].append(audio_file.filename[:-4])
-            self._whois[owner].sort()
-            self._update_map_audio()
-            await ctx.send('Added file to the audio index')
+            if audio_file.filename[:-4] not in self._whois[owner]:
+                self._whois[owner].append(audio_file.filename[:-4])
+                self._whois[owner].sort()
+                self._update_map_audio()
+            await ctx.send('Added or updated audio index file')
         else:
             await ctx.send('Error, missing audio file')
 
