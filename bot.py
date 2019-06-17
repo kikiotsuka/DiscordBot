@@ -18,11 +18,12 @@ BOT_DESCRIPTION = 'Bot for personal use with random commands'
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, description=BOT_DESCRIPTION)
 
 # Setup logging
-logger = logging.getLogger('discord')
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
+logger.addHandler(logging.StreamHandler())
 
 @bot.event
 async def on_ready():
