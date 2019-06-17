@@ -1,7 +1,9 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
-import logging, os, collections, pickle, typing
+import logging, os, collections, pickle, typing, datetime
+
+DELAY_TIME = 10
 
 class Audio(commands.Cog):
 
@@ -10,6 +12,7 @@ class Audio(commands.Cog):
         self._AUDIO_DIR = 'audio/'
         self._MAP_FILE = self._AUDIO_DIR + 'whois.pickle'
         self._whois = self._map_audio()
+        self._last = dict()
 
     def _map_audio(self):
         if os.path.isfile(self._MAP_FILE):
@@ -19,6 +22,29 @@ class Audio(commands.Cog):
     def _update_map_audio(self):
         with open(self._MAP_FILE, 'wb') as f:
             pickle.dump(self._whois, f)
+
+    async def cog_before_invoke(self, ctx: commands.Context):
+        self._last[ctx.guild.id] = datetime.datetime.now() 
+
+    async def cog_after_invoke(self, ctx: commands.Context):
+        if not self.auto_disconnect.get_task():
+            logging.info('Starting repeat looper')
+            self.auto_disconnect.start()
+
+    @tasks.loop(minutes=DELAY_TIME)
+    async def auto_disconnect(self):
+        logging.info('Checking auto disconnect')
+        for gid, last in self._last.items():
+            # Time delta in minutes
+            dt = (datetime.datetime.now() - last).seconds / 60
+            logging.info('guild: {}; time since: {}'.format(gid, dt))
+            if dt >= DELAY_TIME:
+                logging.info('Attempting to auto disconnect')
+                guild = self._bot.get_guild(gid)
+                if guild.voice_client is not None:
+                    logging.info('Killing background process')
+                    await guild.voice_client.disconnect()
+                    self.auto_disconnect.stop()
 
     @commands.command()
     @commands.is_owner()
