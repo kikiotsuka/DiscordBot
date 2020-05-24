@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 
-import logging, os, collections, pickle, typing, datetime
+import logging, os, collections, pickle, typing, datetime, time
 
 DELAY_TIME = 10
 
@@ -13,6 +13,8 @@ class Audio(commands.Cog):
         self._MAP_FILE = self._AUDIO_DIR + 'whois.pickle'
         self._whois = self._map_audio()
         self._last = dict()
+        self._ping_ch_id = [384226521000312852, 714249564852322396]
+        self._ping_ch = None
 
     def _map_audio(self):
         if os.path.isfile(self._MAP_FILE):
@@ -133,6 +135,20 @@ class Audio(commands.Cog):
                 vc.source = source
         else:
             await ctx.send('{} doesn\'t exist!'.format(fname), delete_after=1.5)
+
+    @commands.command()
+    async def ping(self, ctx: commands.Context, member: discord.Member):
+        curr_ch = member.voice.channel
+        if self._ping_ch is None:
+            self._ping_ch = [ctx.guild.get_channel(ch_id) for ch_id  in self._ping_ch_id]
+        if curr_ch is not None:
+            await ctx.send('Pinging {}'.format(member.mention))
+            for i in range(6):
+                await member.move_to(self._ping_ch[i % 2], reason='Pinging')
+                time.sleep(0.2)
+            await member.move_to(curr_ch, reason='Pinging')
+        else:
+            await ctx.send('{} is not in a voice channel'.format(member.mention))
 
     async def _get_ch(self, guild: discord.Guild, channel: discord.VoiceChannel):
         if channel is not None:
