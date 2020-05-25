@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 
-import logging, os, collections, pickle, typing, datetime, time
+import logging, os, collections, pickle, typing, datetime, time, asyncio
 
 DELAY_TIME = 10
 
@@ -15,6 +15,7 @@ class Audio(commands.Cog):
         self._last = dict()
         self._ping_ch_id = [384226521000312852, 714249564852322396]
         self._ping_ch = None
+        self._task = None
 
     def _map_audio(self):
         if os.path.isfile(self._MAP_FILE):
@@ -118,9 +119,7 @@ class Audio(commands.Cog):
         await ctx.message.delete()
         
         vc_ch = ctx.author.voice.channel if ctx.author.voice is not None else None
-        vc = await self._get_ch(ctx.guild, vc_ch)
-
-        if vc is None:
+        if vc_ch is None:
             await ctx.send('You need to be in a channel for me to work')
 
         if not fname.endswith('.mp3'):
@@ -128,13 +127,31 @@ class Audio(commands.Cog):
 
         fname = self._AUDIO_DIR + fname
         if os.path.isfile(fname):
+            voice = ctx.guild.voice_client
+            if voice is None:
+                voice = await vc_ch.connect()
+
             source = discord.FFmpegPCMAudio(fname)
-            if not vc.is_playing():
-                vc.play(source)
+            if not voice.is_playing():
+                voice.play(source)
             else:
-                vc.source = source
+                voice.source = source
+            await self._delay_remove(voice)
         else:
             await ctx.send('{} doesn\'t exist!'.format(fname), delete_after=1.5)
+
+    async def _delay_remove(self, voice):
+        if self._task is not None:
+            self._task.cancel()
+        loop = asyncio.get_event_loop()
+        self._task = loop.create_task(self._delay_remove_helper(voice))
+
+    async def _delay_remove_helper(self, voice):
+        try:
+            await asyncio.sleep(15)
+            await voice.disconnect()
+        except asyncio.CancelledError:
+            pass
 
     @commands.command()
     async def ping(self, ctx: commands.Context, member: discord.Member):
@@ -149,18 +166,6 @@ class Audio(commands.Cog):
             await member.move_to(curr_ch, reason='Pinging')
         else:
             await ctx.send('{} is not in a voice channel'.format(member.mention))
-
-    async def _get_ch(self, guild: discord.Guild, channel: discord.VoiceChannel):
-        if channel is not None:
-            if guild.voice_client is not None and guild.voice_client.is_connected():
-                if guild.voice_client.channel == channel:
-                    return guild.voice_client
-                await guild.voice_client.disconnect()
-            return await channel.connect()
-        
-        if guild.voice_client is not None:
-            return guild.voice_client
-        return None
 
 def setup(bot: commands.Bot):
     bot.add_cog(Audio(bot))
