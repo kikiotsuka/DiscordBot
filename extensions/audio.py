@@ -16,6 +16,8 @@ class Audio(commands.Cog):
         self._ping_ch_id = [384226521000312852, 714249564852322396]
         self._ping_ch = None
         self._task = None
+        self.MOVE_DELAY = 0.4
+        self.MOVE_ITERATIONS = 3
 
     def _map_audio(self):
         if os.path.isfile(self._MAP_FILE):
@@ -160,9 +162,9 @@ class Audio(commands.Cog):
             self._ping_ch = [ctx.guild.get_channel(ch_id) for ch_id  in self._ping_ch_id]
         if curr_ch is not None:
             await ctx.send('Pinging {}'.format(member.mention))
-            for i in range(6):
+            for i in range(self.MOVE_ITERATIONS * 2):
                 await member.move_to(self._ping_ch[i % 2], reason='Pinging')
-                time.sleep(0.2)
+                time.sleep(self.MOVE_DELAY)
             await member.move_to(curr_ch, reason='Pinging')
         else:
             await ctx.send('{} is not in a voice channel'.format(member.mention))
