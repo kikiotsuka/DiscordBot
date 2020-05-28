@@ -157,7 +157,15 @@ class Audio(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx: commands.Context, member: discord.Member):
-        curr_ch = member.voice.channel
+        if member.bot:
+            await ctx.send('I received your ping, what can I do for you {}?'.format(ctx.author.mention))
+            return
+        if self._bot.is_owner(member):
+            await ctx.send('Please ping {} nicely {}'.format(member.mention, ctx.author.mention))
+            return
+        curr_ch = None
+        if member.voice is not None:
+            curr_ch = member.voice.channel
         if self._ping_ch is None:
             self._ping_ch = [ctx.guild.get_channel(ch_id) for ch_id  in self._ping_ch_id]
         if curr_ch is not None:

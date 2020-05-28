@@ -37,7 +37,6 @@ class Admin(commands.Cog):
             'extensions.misc',
             'extensions.uptime',
             'extensions.waifu',
-            'extensions.image',
             'extensions.audio'
         ]
 
@@ -76,6 +75,81 @@ class Admin(commands.Cog):
         def predicate(member: discord.Member):
             return member == target
         await self._cleanup_aux(ctx, delete_count, predicate)
+
+    @commands.command()
+    async def create_role(self, ctx: commands.Context):
+        message = ctx.message
+        role_name = ' '.join(filter(lambda x: not x.startswith('<@!'), message.content.strip().split()[1:]))
+        if role_name:
+            role = None
+            try:
+                role = await ctx.guild.create_role(
+                    name=role_name,
+                    color=discord.Color.blue(),
+                    mentionable=True,
+                    reason='role made by {}'.format(ctx.author.name))
+            except Exception as e:
+                logging.error(e)
+                await ctx.send('Failed to make that role')
+
+            if role is not None:
+                failed = []
+                for member in set(message.mentions):
+                    try:
+                        roles = member.roles + [role]
+                        await member.edit(roles=roles)
+                    except Exception as e:
+                        logging.error(e)
+                        failed.append(member)
+                await ctx.send('Successfully Created role {}'.format(role.mention))
+                if failed:
+                    await ctx.send('Could not add {} to the role'.format(', '.join(
+                        map(lambda x: x.mention, failed))))
+        else:
+            await ctx.send('You did not specify the name of the role')
+
+    @commands.command(help='Adds (or removes if the --remove flag is used) the mentioned people to the role')
+    async def update_role(self, ctx: commands.Context):
+        add = '--remove' not in ctx.message.content
+        members = ctx.message.mentions
+        if not ctx.message.role_mentions:
+            await ctx.send('You did not specify a role')
+            return
+        if len(ctx.message.role_mentions) > 1:
+            await ctx.send('You are allowed to only update one role at a time')
+            return
+        if not members:
+            await ctx.send('You did not specify anyone to update their roles')
+            return
+        role = ctx.message.role_mentions[0]
+        successful = []
+        failed = []
+        for member in members:
+            roles = member.roles
+            if add:
+                if role not in roles:
+                    roles.append(role)
+                    await member.edit(roles=roles)
+                    successful.append(member)
+                else:
+                    failed.append(member)
+            else:
+                if role in roles:
+                    roles.remove(role)
+                    await member.edit(roles=roles)
+                    successful.append(member)
+                else:
+                    failed.append(member)
+        if successful:
+            await ctx.send('Successfully {} {} {} the role'.format('added' if add else 'removed',', '.join(
+                map(lambda x: x.mention, successful)), 'to' if add else 'from'))
+        if failed:
+            if add:
+                await ctx.send('Failed to add {} to the role, they are already part of it'.format(', '.join(
+                    map(lambda x: x.mention, failed))))
+            else:
+                await ctx.send('Failed to remove {} from the role, they were not a part of it'.format(', '.join(
+                    map(lambda x: x.mention, failed))))
 
     @commands.command()
     @whitelisted([130891181922975744, 181181432989745152])
