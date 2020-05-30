@@ -160,7 +160,7 @@ class Audio(commands.Cog):
         if member.bot:
             await ctx.send('I received your ping, what can I do for you {}?'.format(ctx.author.mention))
             return
-        if self._bot.is_owner(member):
+        if await self._bot.is_owner(member):
             await ctx.send('Please ping {} nicely {}'.format(member.mention, ctx.author.mention))
             return
         curr_ch = None
